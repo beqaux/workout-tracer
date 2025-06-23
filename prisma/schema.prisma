@@ -1,0 +1,58 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+// Kas Grupları (Artık bir Enum değil, bir Model)
+// Bu sayede dinamik olarak eklenebilir ve yönetilebilir.
+model MuscleGroup {
+  id        String             @id @default(cuid())
+  name      String             @unique // Örn: "GÖĞÜS", "SIRT", "BACAK"
+  exercises ExerciseTemplate[] // Bu kas grubuna ait egzersizler (Çoktan Çoğa)
+}
+
+// Ana Egzersiz Listesi (Tüm egzersizlerin tanımı)
+// Örn: "Bench Press" bir ExerciseTemplate'dir.
+model ExerciseTemplate {
+  id            String           @id @default(cuid())
+  name          String           @unique
+  muscleGroups  MuscleGroup[]    // Bu egzersizin etkilediği kas grupları (Çoktan Çoğa)
+  loggedEntries LoggedExercise[] // Bu egzersizin yapıldığı tüm kayıtlar
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  workouts  Workout[]
+}
+
+// Kullanıcının yaptığı tek bir antrenman seansı
+model Workout {
+  id              String           @id @default(cuid())
+  name            String           // "İtme Günü", "Antrenman 1"
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id])
+  userId          String
+  loggedExercises LoggedExercise[] // Bu antrenmanda yapılan egzersiz kayıtları
+}
+
+// Bir antrenmanda yapılan spesifik egzersiz kaydı
+// Örn: Salı günü yapılan 3 set 10 tekrar 80kg Bench Press.
+model LoggedExercise {
+  id                 String           @id @default(cuid())
+  sets               Int
+  reps               Int
+  weight             Float?
+  workout            Workout          @relation(fields: [workoutId], references: [id])
+  workoutId          String
+  exerciseTemplate   ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id])
+  exerciseTemplateId String
+} 
