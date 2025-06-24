@@ -95,6 +95,44 @@ export async function PUT(
   }
 }
 
+// PATCH: Toggle workout completion status
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const data = await request.json();
+
+    const updatedWorkout = await prisma.workout.update({
+      where: {
+        id: params.id,
+      },
+      data: {
+        completed: data.completed,
+      },
+      include: {
+        loggedExercises: {
+          include: {
+            exerciseTemplate: {
+              include: {
+                muscleGroups: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(updatedWorkout);
+  } catch (error) {
+    console.error('Error updating workout completion:', error);
+    return NextResponse.json(
+      { error: 'Failed to update workout completion' },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE: Delete a workout
 export async function DELETE(
   request: Request,

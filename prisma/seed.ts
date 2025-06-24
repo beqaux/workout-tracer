@@ -183,6 +183,7 @@ async function main() {
     where: { email: 'test@example.com' },
     update: {},
     create: {
+      id: 'test-user-id',
       email: 'test@example.com',
     }
   })
